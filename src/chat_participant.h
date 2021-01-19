@@ -11,7 +11,7 @@ class TChatParticipant {
 public:
     virtual ~TChatParticipant() = default;
 
-    virtual void Deliver(const TChatMessage& msg) = 0;
+    virtual void Deliver(const TNetMessage& msg) = 0;
 };
 
 using TChatParticipantPtr = boost::shared_ptr<TChatParticipant>;

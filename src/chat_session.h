@@ -39,12 +39,12 @@ public:
         Room_->Join(shared_from_this());
         boost::asio::async_read(
             Socket_,
-            boost::asio::buffer(ReadMsg_.MutableHeader(), TChatMessage::HeaderLength),
+            boost::asio::buffer(ReadMsg_.MutableHeader(), TNetMessage::HeaderLength),
             boost::bind(&TChatSession::HandleReadHeader, shared_from_this(), boost::asio::placeholders::error));
 
     }
 
-    void Deliver(const TChatMessage& msg) override {
+    void Deliver(const TNetMessage& msg) override {
         bool writeInProgress = !WriteMsgs_.empty();
         WriteMsgs_.push_back(msg);
         if (!writeInProgress) {
@@ -71,7 +71,7 @@ public:
             std::cerr << "TChatServer::HandleReadBody, msg = '" << ReadMsg_.Body() << "'" << std::endl;
             Room_->Deliver(ReadMsg_);
             boost::asio::async_read(Socket_,
-                boost::asio::buffer(ReadMsg_.MutableHeader(), TChatMessage::HeaderLength),
+                boost::asio::buffer(ReadMsg_.MutableHeader(), TNetMessage::HeaderLength),
                 boost::bind(&TChatSession::HandleReadHeader, shared_from_this(),
                     boost::asio::placeholders::error));
         } else {
@@ -97,8 +97,8 @@ public:
 private:
     tcp::socket Socket_;
     TChatRoom* Room_ = nullptr;
-    TChatMessage ReadMsg_;
-    TChatMessageQueue WriteMsgs_;
+    TNetMessage ReadMsg_;
+    TNetMessageQueue WriteMsgs_;
 };
 
 using TChatSessionPtr = boost::shared_ptr<TChatSession>;

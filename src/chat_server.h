@@ -35,6 +35,11 @@ public:
         }
     }
 
+    void WriteMessage(const TMessageProto& msgProto) {
+        TNetMessage netMessage = TNetMessage::FromProto(msgProto);
+        ChatRoom_.Deliver(netMessage);
+    }
+
 private:
     boost::asio::io_service* IOService_ = nullptr;
     tcp::acceptor Acceptor_;

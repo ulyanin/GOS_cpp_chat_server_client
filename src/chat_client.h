@@ -33,6 +33,13 @@ namespace NChat {
 //    tcp::resolver::iterator CurrentIt_;
 //};
 
+//class TPrettyPrinter {
+//public:
+//    TPrettyPrinter()
+//private:
+//    bool Started_ = false;
+//};
+
 class TChatClient
 {
 public:
@@ -46,6 +53,11 @@ public:
         Socket_.async_connect(
             endpoint,
             boost::bind(&TChatClient::HandleConnect, this, boost::asio::placeholders::error, ++endpointIt));
+    }
+
+    void Write(const TMessageProto& msg) {
+        TNetMessage serialized = TNetMessage::FromProto(msg);
+        Write(serialized);
     }
 
     void Write(const TNetMessage& msg) {
@@ -90,8 +102,11 @@ private:
     }
 
     void HandleReadBody(const boost::system::error_code& error) {
-        if (!error) {
-            std::cout << ReadMsg_.Body() << "\n";
+        TMessageProto proto;
+        if (!error && !proto.ParseFromString(std::string(ReadMsg_.Body()))) {
+            std::cerr << "ParseFromString failed" << std::endl;
+        } else if (!error) {
+            PrettyPrint(proto);
             boost::asio::async_read(Socket_,
                 boost::asio::buffer(ReadMsg_.MutableHeader(), TChatMessage::HeaderLength),
                 boost::bind(&TChatClient::HandleReadHeader, this, boost::asio::placeholders::error));
@@ -130,6 +145,15 @@ private:
     void DoClose() {
         std::cerr << "DoClose()" << std::endl;
         Socket_.close();
+    }
+
+    void PrettyPrint(const TMessageProto& messageProto) {
+        std::cout << "+---------------------------------------------------------+" << std::endl;
+        std::cout << "| from: " << messageProto.login() << std::endl;
+        std::cout << "| content:" << std::endl;
+        std::cout << "| " << messageProto.content() << std::endl;
+        std::cout << "+---------------------------------------------------------+" << std::endl;
+
     }
 
 private:

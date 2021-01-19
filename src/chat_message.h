@@ -1,4 +1,7 @@
 #pragma once
+
+#include "message.pb.h"
+
 #include <boost/asio/buffer.hpp>
 
 #include <string>
@@ -21,6 +24,10 @@ public:
         std::copy(message.begin(), message.end(), msg.MutableBody());
         msg.EncodeHeader();
         return msg;
+    }
+
+    static TNetMessage FromProto(const TMessageProto& message) {
+        return FromString(message.SerializeAsString());
     }
 
     char* MutableHeader() {

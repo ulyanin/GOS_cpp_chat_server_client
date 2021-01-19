@@ -1,6 +1,9 @@
+syntax = "proto2";
+
 package NChat;
 
 message TMessageProto {
-    optional string Body = 1;
+    optional string Content = 1;
     optional string Login = 2;
+    repeated string DeliveredLogins = 3;
 }

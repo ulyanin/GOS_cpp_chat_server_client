@@ -3,10 +3,10 @@
 
 # Optionally glob, but only for CMake 3.12 or later:
 # file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${ChatServer_SOURCE_DIR}/include/modern/*.h")
-set(HEADER_LIST "${ChatServer_SOURCE_DIR}/include/chat_server/lib.h")
+#set(HEADER_LIST "${ChatServer_SOURCE_DIR}/include/chat_server/lib.h")
 
 # Make an automatic library - will be static or dynamic based on user setting
-add_library(chat_server_library lib.cpp chat_client.cpp chat_server.cpp chat_message.cpp ${HEADER_LIST})
+add_library(chat_server_library lib.cpp chat_client.cpp chat_server.cpp chat_message.cpp)
 
 # We need this directory, and users of our library will need it too
 include_directories(${ProtobufIncludePath})
