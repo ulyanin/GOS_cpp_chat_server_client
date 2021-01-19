@@ -12,3 +12,12 @@ make
 ```
 
 ## Запуск
+### Сервер
+```(bash)
+./apps/chat_server server 4242
+```
+
+### Клиент
+```(bash)
+./apps/chat_client ulyanin localhost 4242
+```
