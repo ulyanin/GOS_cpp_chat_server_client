@@ -1,5 +1,5 @@
 #include "chat_client.h"
-
+#include "lib.h"
 #include "message.pb.h"
 
 int main(int argc, const char* argv[])
@@ -34,6 +34,9 @@ int main(int argc, const char* argv[])
         while (!chatClient.Stopped() && std::getline(std::cin, line)) {
             if (chatClient.Stopped()) {
                 std::cerr << "client has been stopped or was not launched, break" << std::endl;
+                break;
+            }
+            if (NChat::StartsWith(line, "/shutdown")) {
                 break;
             }
             if (!line.empty()) {
