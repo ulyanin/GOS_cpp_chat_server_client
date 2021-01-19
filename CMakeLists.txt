@@ -43,7 +43,7 @@ endif()
 
 # Accumulator library
 # This is header only, so could be replaced with git submodules or FetchContent
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
 # Adds Boost::boost
 
 # Formatting library
