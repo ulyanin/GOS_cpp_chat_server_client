@@ -1,11 +1,9 @@
 #include <chat_server/chat_client.h>
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
-    try
-    {
-        if (argc != 3)
-        {
+    try {
+        if (argc != 3) {
             std::cerr << "Usage: chat_client <host> <port>\n";
             return 1;
         }
@@ -16,26 +14,20 @@ int main(int argc, char* argv[])
         tcp::resolver::query query(argv[1], argv[2]);
         tcp::resolver::iterator iterator = resolver.resolve(query);
 
-        chat_client c(io_service, iterator);
+        NChat::TChatClient chatClient(io_service, iterator);
 
-        boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
+        boost::thread thread(boost::bind(&boost::asio::io_service::run, &io_service));
 
-        char line[chat_message::max_body_length + 1];
-        while (std::cin.getline(line, chat_message::max_body_length + 1))
+        std::string line;
+        while (std::getline(std::cin, line))
         {
-            using namespace std; // For strlen and memcpy.
-            chat_message msg;
-            msg.body_length(strlen(line));
-            memcpy(msg.body(), line, msg.body_length());
-            msg.encode_header();
-            c.write(msg);
+            NChat::TChatMessage msg = NChat::TChatMessage::FromString(line);
+            chatClient.Write(msg);
         }
 
-        c.close();
-        t.join();
-    }
-    catch (std::exception& e)
-    {
+        chatClient.Close();
+        thread.join();
+    } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
 

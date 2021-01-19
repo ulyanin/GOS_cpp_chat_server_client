@@ -1,90 +1,68 @@
-//
-// chat_message.hpp
-// ~~~~~~~~~~~~~~~~
-//
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
 #pragma once
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <boost/asio/buffer.hpp>
 
-class chat_message
-{
+#include <string>
+#include <string_view>
+#include <cassert>
+#include <deque>
+
+namespace NChat {
+
+class TChatMessage {
 public:
-    enum { header_length = 4 };
-    enum { max_body_length = 512 };
+    static constexpr size_t HeaderLength = 4;
+    static constexpr size_t MaxBodyLength = 4096;
 
-    chat_message()
-        : body_length_(0)
-    {
+public:
+    TChatMessage() = default;
+
+    static TChatMessage FromString(const std::string& message) {
+        TChatMessage msg;
+        msg.BodyLength_ = message.length();
+        std::copy(message.begin(), message.end(), msg.MutableBody());
+        msg.EncodeHeader();
+        return msg;
     }
 
-    const char* data() const
-    {
-        return data_;
+    char* MutableHeader() {
+        return Data_;
     }
 
-    char* data()
-    {
-        return data_;
+    char* MutableBody() {
+        return Data_ + HeaderLength;
     }
 
-    size_t length() const
-    {
-        return header_length + body_length_;
+    std::string_view Data() const {
+        return std::string_view(Data_, HeaderLength + BodyLength_);
     }
 
-    const char* body() const
-    {
-        return data_ + header_length;
+    std::string_view Body() const {
+        return std::string_view(Data_ + HeaderLength, BodyLength_);
     }
 
-    char* body()
-    {
-        return data_ + header_length;
+    size_t BodyLength() const {
+        return BodyLength_;
     }
 
-    size_t body_length() const
-    {
-        return body_length_;
+    bool DecodeHeader() {
+        BodyLength_ = std::stoll(std::string(Data_, HeaderLength));
+         if (BodyLength_ > MaxBodyLength) {
+             BodyLength_ = 0;
+         }
+         return BodyLength_ != 0;
     }
 
-    void body_length(size_t length)
-    {
-        body_length_ = length;
-        if (body_length_ > max_body_length)
-            body_length_ = max_body_length;
-    }
-
-    bool decode_header()
-    {
-        using namespace std; // For strncat and atoi.
-        char header[header_length + 1] = "";
-        strncat(header, data_, header_length);
-        body_length_ = atoi(header);
-        if (body_length_ > max_body_length)
-        {
-            body_length_ = 0;
-            return false;
-        }
-        return true;
-    }
-
-    void encode_header()
-    {
-        using namespace std; // For sprintf and memcpy.
-        char header[header_length + 1] = "";
-        sprintf(header, "%4d", body_length_);
-        memcpy(data_, header, header_length);
+    void EncodeHeader() {
+        std::string header = std::to_string(BodyLength_);
+        memcpy(Data_, header.data(), HeaderLength);
     }
 
 private:
-    char data_[header_length + max_body_length];
-    size_t body_length_;
+    char Data_[HeaderLength + MaxBodyLength] = "";
+    size_t BodyLength_ = 0;
 };
+
+using TChatMessageQueue = std::deque<TChatMessage>;
+
+} // namespace NChat

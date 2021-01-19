@@ -9,97 +9,86 @@
 
 using boost::asio::ip::tcp;
 
-typedef std::deque<chat_message> chat_message_queue;
+namespace NChat {
 
-class chat_client
+class TChatClient
 {
 public:
-    chat_client(boost::asio::io_service& io_service,
-        tcp::resolver::iterator endpoint_iterator)
-        : io_service_(io_service),
-        socket_(io_service)
+    TChatClient(boost::asio::io_service& io_service,
+        tcp::resolver::iterator endpointIt)
+        : IOService_(io_service)
+        , Socket_(io_service)
     {
-        tcp::endpoint endpoint = *endpoint_iterator;
-        socket_.async_connect(endpoint,
-            boost::bind(&chat_client::handle_connect, this,
-                boost::asio::placeholders::error, ++endpoint_iterator));
+        tcp::endpoint endpoint = *endpointIt;
+        Socket_.async_connect(endpoint,
+            boost::bind(&TChatClient::HandleConnect, this,
+                boost::asio::placeholders::error, ++endpointIt));
     }
 
-    void write(const chat_message& msg)
-    {
-        io_service_.post(boost::bind(&chat_client::do_write, this, msg));
+    void Write(const TChatMessage& msg) {
+        IOService_.post(boost::bind(&TChatClient::DoWrite, this, msg));
     }
 
-    void close()
-    {
-        io_service_.post(boost::bind(&chat_client::do_close, this));
+    void Close() {
+        IOService_.post(boost::bind(&TChatClient::DoClose, this));
     }
 
 private:
 
-    void handle_connect(const boost::system::error_code& error,
-        tcp::resolver::iterator endpoint_iterator)
+    void HandleConnect(const boost::system::error_code& error,
+        tcp::resolver::iterator endpointIt)
     {
-        if (!error)
-        {
-            boost::asio::async_read(socket_,
-                boost::asio::buffer(read_msg_.data(), chat_message::header_length),
-                boost::bind(&chat_client::handle_read_header, this,
+        if (!error) {
+            boost::asio::async_read(
+                Socket_,
+                boost::asio::buffer(ReadMsg_.MutableHeader(), TChatMessage::HeaderLength),
+                boost::bind(&TChatClient::HandleReadHeader, this,
                     boost::asio::placeholders::error));
-        }
-        else if (endpoint_iterator != tcp::resolver::iterator())
-        {
-            socket_.close();
-            tcp::endpoint endpoint = *endpoint_iterator;
-            socket_.async_connect(endpoint,
-                boost::bind(&chat_client::handle_connect, this,
-                    boost::asio::placeholders::error, ++endpoint_iterator));
+        } else if (endpointIt != tcp::resolver::iterator()) {
+            Socket_.close();
+            tcp::endpoint endpoint = *endpointIt;
+            Socket_.async_connect(endpoint,
+                boost::bind(&TChatClient::HandleConnect, this,
+                    boost::asio::placeholders::error, ++endpointIt));
         }
     }
 
-    void handle_read_header(const boost::system::error_code& error)
+    void HandleReadHeader(const boost::system::error_code& error)
     {
-        if (!error && read_msg_.decode_header())
+        if (!error && ReadMsg_.DecodeHeader())
         {
-            boost::asio::async_read(socket_,
-                boost::asio::buffer(read_msg_.body(), read_msg_.body_length()),
-                boost::bind(&chat_client::handle_read_body, this,
-                    boost::asio::placeholders::error));
-        }
-        else
-        {
-            do_close();
-        }
-    }
-
-    void handle_read_body(const boost::system::error_code& error)
-    {
-        if (!error)
-        {
-            std::cout.write(read_msg_.body(), read_msg_.body_length());
-            std::cout << "\n";
-            boost::asio::async_read(socket_,
-                boost::asio::buffer(read_msg_.data(), chat_message::header_length),
-                boost::bind(&chat_client::handle_read_header, this,
+            boost::asio::async_read(Socket_,
+                boost::asio::buffer(ReadMsg_.MutableBody(), ReadMsg_.BodyLength()),
+                boost::bind(&TChatClient::HandleReadBody, this,
                     boost::asio::placeholders::error));
         }
         else
         {
-            do_close();
+            DoClose();
         }
     }
 
-    void do_write(chat_message msg)
+    void HandleReadBody(const boost::system::error_code& error) {
+        if (!error) {
+            std::cout << ReadMsg_.Body() << "\n";
+            boost::asio::async_read(Socket_,
+                boost::asio::buffer(ReadMsg_.MutableHeader(), TChatMessage::HeaderLength),
+                boost::bind(&TChatClient::HandleReadHeader, this, boost::asio::placeholders::error));
+        } else {
+            DoClose();
+        }
+    }
+
+    void DoWrite(TChatMessage msg)
     {
-        bool write_in_progress = !write_msgs_.empty();
-        write_msgs_.push_back(msg);
+        bool write_in_progress = !WriteMsgs_.empty();
+        WriteMsgs_.push_back(msg);
         if (!write_in_progress)
         {
-            boost::asio::async_write(socket_,
-                boost::asio::buffer(write_msgs_.front().data(),
-                    write_msgs_.front().length()),
-                boost::bind(&chat_client::handle_write, this,
-                    boost::asio::placeholders::error));
+            boost::asio::async_write(
+                Socket_,
+                boost::asio::buffer(WriteMsgs_.front().Data()),
+                boost::bind(&TChatClient::handle_write, this, boost::asio::placeholders::error));
         }
     }
 
@@ -107,30 +96,28 @@ private:
     {
         if (!error)
         {
-            write_msgs_.pop_front();
-            if (!write_msgs_.empty())
-            {
-                boost::asio::async_write(socket_,
-                    boost::asio::buffer(write_msgs_.front().data(),
-                        write_msgs_.front().length()),
-                    boost::bind(&chat_client::handle_write, this,
-                        boost::asio::placeholders::error));
+            WriteMsgs_.pop_front();
+            if (!WriteMsgs_.empty()) {
+                boost::asio::async_write(
+                    Socket_,
+                    boost::asio::buffer(WriteMsgs_.front().Data()),
+                    boost::bind(&TChatClient::handle_write, this, boost::asio::placeholders::error));
             }
-        }
-        else
-        {
-            do_close();
+        } else {
+            DoClose();
         }
     }
 
-    void do_close()
+    void DoClose()
     {
-        socket_.close();
+        Socket_.close();
     }
 
 private:
-    boost::asio::io_service& io_service_;
-    tcp::socket socket_;
-    chat_message read_msg_;
-    chat_message_queue write_msgs_;
+    boost::asio::io_service& IOService_;
+    tcp::socket Socket_;
+    TChatMessage ReadMsg_;
+    TChatMessageQueue WriteMsgs_;
 };
+
+}

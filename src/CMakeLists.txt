@@ -15,7 +15,7 @@ target_include_directories(chat_server_library PUBLIC ../include)
 target_link_libraries(chat_server_library PRIVATE ${Boost_LIBRARIES})
 
 # All users of this library will need at least C++11
-target_compile_features(chat_server_library PUBLIC cxx_std_11)
+target_compile_features(chat_server_library PUBLIC cxx_std_17)
 
 # IDEs should put the headers in a nice place
 source_group(
