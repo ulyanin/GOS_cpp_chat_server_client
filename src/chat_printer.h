@@ -2,6 +2,8 @@
 
 #include "message.pb.h"
 
+#include <iostream>
+
 namespace NChat {
 
 class TChatPrinter {
