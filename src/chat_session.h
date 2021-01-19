@@ -24,12 +24,9 @@ public:
         : Socket_(io_service)
         , Room_(room)
     {
-        std::cerr << "TChatSession() " << static_cast<void*>(this) << std::endl;
     }
 
-    virtual ~TChatSession() {
-        std::cerr << "~TChatSession() " << static_cast<void*>(this) << std::endl;
-    }
+    virtual ~TChatSession() = default;
 
     tcp::socket& MutableSocket() {
         return Socket_;
@@ -68,7 +65,6 @@ public:
 
     void HandleReadBody(const boost::system::error_code& error) {
         if (!error) {
-            std::cerr << "TChatServer::HandleReadBody, msg = '" << ReadMsg_.Body() << "'" << std::endl;
             Room_->Deliver(ReadMsg_);
             boost::asio::async_read(Socket_,
                 boost::asio::buffer(ReadMsg_.MutableHeader(), TNetMessage::HeaderLength),

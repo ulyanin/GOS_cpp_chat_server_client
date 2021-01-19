@@ -6,7 +6,7 @@
 #set(HEADER_LIST "${ChatServer_SOURCE_DIR}/include/chat_server/lib.h")
 
 # Make an automatic library - will be static or dynamic based on user setting
-add_library(chat_server_library lib.cpp chat_client.cpp chat_server.cpp chat_message.cpp)
+add_library(chat_server_library lib.cpp chat_client.cpp chat_server.cpp chat_message.cpp timer.cpp chat_printer.cpp)
 
 # We need this directory, and users of our library will need it too
 include_directories(${ProtobufIncludePath})

@@ -1,4 +1,5 @@
 #include "chat_message.h"
+#include "chat_printer.h"
 
 #include <cstdlib>
 #include <deque>
@@ -49,7 +50,6 @@ public:
         , Socket_(io_service)
     {
         tcp::endpoint endpoint = *endpointIt;
-        std::cerr << "Socket_.async_connect begin" << std::endl;
         Socket_.async_connect(
             endpoint,
             boost::bind(&TChatClient::HandleConnect, this, boost::asio::placeholders::error, ++endpointIt));
@@ -61,7 +61,6 @@ public:
     }
 
     void Write(const TNetMessage& msg) {
-        std::cerr << "TChatClient::Write(msg = '" << msg.Body() << "')" << std::endl;
         IOService_.post(boost::bind(&TChatClient::DoWrite, this, msg));
     }
 
@@ -69,10 +68,17 @@ public:
         IOService_.post(boost::bind(&TChatClient::DoClose, this));
     }
 
+    bool ConnectionError() const {
+        return ConnectionError_;
+    }
+
+    bool Stopped() const {
+        return Stopped_;
+    }
+
 private:
 
     void HandleConnect(const boost::system::error_code& error, tcp::resolver::iterator endpointIt) {
-        std::cerr << "TChatClient::HandleConnect(error = " << (bool)(error) << ")" << std::endl;
         if (!error) {
             boost::asio::async_read(
                 Socket_,
@@ -86,7 +92,8 @@ private:
                 endpoint,
                 boost::bind(&TChatClient::HandleConnect, this, boost::asio::placeholders::error, ++endpointIt));
         } else {
-            std::cerr << "endpointIt == tcp::resolver::iterator()" << std::endl;
+            ConnectionError_ = true;
+            Stopped_ = true;
         }
     }
 
@@ -116,7 +123,6 @@ private:
     }
 
     void DoWrite(TNetMessage msg) {
-        std::cerr << "TChatClient::DoWrite(msg = '" << msg.Body() << "')" << std::endl;
         bool writeInProgress = !WriteMsgs_.empty();
         WriteMsgs_.push_back(msg);
         if (!writeInProgress) {
@@ -128,7 +134,6 @@ private:
     }
 
     void HandleWrite(const boost::system::error_code& error) {
-        std::cerr << "TChatClient::HandleWrite() " << "WriteMsgs_.size() = " << WriteMsgs_.size() << std::endl;
         if (!error) {
             WriteMsgs_.pop_front();
             if (!WriteMsgs_.empty()) {
@@ -143,24 +148,22 @@ private:
     }
 
     void DoClose() {
-        std::cerr << "DoClose()" << std::endl;
         Socket_.close();
+        Stopped_ = true;
     }
 
     void PrettyPrint(const TMessageProto& messageProto) {
-        std::cout << "+---------------------------------------------------------+" << std::endl;
-        std::cout << "| from: " << messageProto.login() << std::endl;
-        std::cout << "| content:" << std::endl;
-        std::cout << "| " << messageProto.content() << std::endl;
-        std::cout << "+---------------------------------------------------------+" << std::endl;
-
+        ChatPrinter_.PrintMessage(messageProto);
     }
 
 private:
+    bool Stopped_ = false;
+    bool ConnectionError_ = false;
     boost::asio::io_service& IOService_;
     tcp::socket Socket_;
     TNetMessage ReadMsg_;
     TNetMessageQueue WriteMsgs_;
+    TChatPrinter ChatPrinter_;
 };
 
 }

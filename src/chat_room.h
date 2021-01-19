@@ -1,6 +1,7 @@
 #pragma once
 
 #include "chat_participant.h"
+#include "chat_printer.h"
 #include "chat_history.pb.h"
 
 #include <boost/bind.hpp>
@@ -40,6 +41,12 @@ public:
     }
 
     void Deliver(const TNetMessage& msg) {
+        TMessageProto msgProto;
+        if (!msgProto.ParseFromString(std::string(msg.Body()))) {
+            std::cerr << "incompatible with TMessageProto message received" << std::endl;
+        } else {
+            ChatPrinter_.PrintMessage(msgProto);
+        }
         History_.push_back(msg);
         while (History_.size() > MaxHistorySize) {
             History_.pop_front();
@@ -61,6 +68,7 @@ private:
         TChatHistory chatHistory;
         if (google::protobuf::TextFormat::ParseFromString(fileContent, &chatHistory)) {
             for (const TMessageProto& msg : chatHistory.history()) {
+                ChatPrinter_.PrintMessage(msg);
                 History_.push_back(TNetMessage::FromProto(msg));
             }
         }
@@ -91,6 +99,7 @@ private:
 
     std::set<TChatParticipantPtr> Participants_;
     TNetMessageQueue History_;
+    TChatPrinter ChatPrinter_;
 };
 
 } // namespace NChat

@@ -28,11 +28,24 @@ int main(int argc, const char* argv[])
         boost::thread thread(boost::bind(&boost::asio::io_service::run, &io_service));
 
         std::string line;
-        while (std::getline(std::cin, line)) {
-            NChat::TMessageProto msg;
-            msg.set_content(line);
-            msg.set_login(login);
-            chatClient.Write(msg);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        while (!chatClient.Stopped() && std::getline(std::cin, line)) {
+            if (chatClient.Stopped()) {
+                std::cerr << "client has been stopped or was not launched, break" << std::endl;
+                break;
+            }
+            if (!line.empty()) {
+                NChat::TMessageProto msg;
+                msg.set_content(line);
+                msg.set_login(login);
+                chatClient.Write(msg);
+            }
+        }
+
+        if (chatClient.ConnectionError()) {
+            std::cerr << "Connection error, launch server and retry" << std::endl;
         }
 
         chatClient.Close();
