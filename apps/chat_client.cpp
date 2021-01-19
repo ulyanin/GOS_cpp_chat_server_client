@@ -13,9 +13,9 @@ int main(int argc, const char* argv[])
         std::string host(argv[2]);
         std::string port(argv[3]);
 
-        boost::asio::io_service io_service;
+        boost::asio::io_service ioService;
 
-        tcp::resolver resolver(io_service);
+        tcp::resolver resolver(ioService);
         tcp::resolver::query query(host, port);
         tcp::resolver::iterator iterator = resolver.resolve(query);
         if (iterator == tcp::resolver::iterator()) {
@@ -23,9 +23,9 @@ int main(int argc, const char* argv[])
             return 1;
         }
 
-        NChat::TChatClient chatClient(io_service, iterator);
+        NChat::TChatClient chatClient(ioService, iterator);
 
-        boost::thread thread(boost::bind(&boost::asio::io_service::run, &io_service));
+        boost::thread thread(boost::bind(&boost::asio::io_service::run, &ioService));
 
         std::string line;
 
@@ -51,6 +51,7 @@ int main(int argc, const char* argv[])
             std::cerr << "Connection error, launch server and retry" << std::endl;
         }
 
+        ioService.stop();
         chatClient.Close();
         thread.join();
     } catch (std::exception& e) {
