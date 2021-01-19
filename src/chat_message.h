@@ -15,12 +15,45 @@ public:
 
     TNetMessage() = default;
 
-    auto MutableHeaderBuffer() {
-        return boost::asio::buffer(Data_, HeaderLength);
+    static TNetMessage FromString(const std::string& message) {
+        TNetMessage msg;
+        msg.BodyLength_ = message.length();
+        std::copy(message.begin(), message.end(), msg.MutableBody());
+        msg.EncodeHeader();
+        return msg;
     }
 
-    auto MutableBodyBuffer() {
-        return boost::asio::buffer(Data_ + BodyLength_, BodyLength_);
+    char* MutableHeader() {
+        return Data_;
+    }
+
+    char* MutableBody() {
+        return Data_ + HeaderLength;
+    }
+
+    std::string_view Data() const {
+        return std::string_view(Data_, HeaderLength + BodyLength_);
+    }
+
+    std::string_view Body() const {
+        return std::string_view(Data_ + HeaderLength, BodyLength_);
+    }
+
+    size_t BodyLength() const {
+        return BodyLength_;
+    }
+
+    bool DecodeHeader() {
+        BodyLength_ = std::stoll(std::string(Data_, HeaderLength));
+        if (BodyLength_ > MaxBodyLength) {
+            BodyLength_ = 0;
+        }
+        return BodyLength_ != 0;
+    }
+
+    void EncodeHeader() {
+        std::string header = std::to_string(BodyLength_);
+        memcpy(Data_, header.data(), HeaderLength);
     }
 
 private:
@@ -84,5 +117,6 @@ private:
 };
 
 using TChatMessageQueue = std::deque<TChatMessage>;
+using TNetMessageQueue = std::deque<TNetMessage>;
 
 } // namespace NChat

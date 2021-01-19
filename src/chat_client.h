@@ -1,4 +1,4 @@
-#include <chat_server/chat_message.h>
+#include "chat_message.h"
 
 #include <cstdlib>
 #include <deque>
@@ -11,27 +11,27 @@ using boost::asio::ip::tcp;
 
 namespace NChat {
 
-class TCycledEndpointIterator {
-
-public:
-    explicit TCycledEndpointIterator(tcp::resolver::iterator begin)
-        : BeginIt_(begin)
-    {
-    }
-
-    TCycledEndpointIterator& operator++() {
-        CurrentIt_++;
-        return *this;
-    }
-
-    tcp::resolver::iterator Current() const {
-        return CurrentIt_;
-    }
-
-private:
-    tcp::resolver::iterator BeginIt_;
-    tcp::resolver::iterator CurrentIt_;
-};
+//class TCycledEndpointIterator {
+//
+//public:
+//    explicit TCycledEndpointIterator(tcp::resolver::iterator begin)
+//        : BeginIt_(begin)
+//    {
+//    }
+//
+//    TCycledEndpointIterator& operator++() {
+//        CurrentIt_++;
+//        return *this;
+//    }
+//
+//    tcp::resolver::iterator Current() const {
+//        return CurrentIt_;
+//    }
+//
+//private:
+//    tcp::resolver::iterator BeginIt_;
+//    tcp::resolver::iterator CurrentIt_;
+//};
 
 class TChatClient
 {
@@ -48,7 +48,7 @@ public:
             boost::bind(&TChatClient::HandleConnect, this, boost::asio::placeholders::error, ++endpointIt));
     }
 
-    void Write(const TChatMessage& msg) {
+    void Write(const TNetMessage& msg) {
         std::cerr << "TChatClient::Write(msg = '" << msg.Body() << "')" << std::endl;
         IOService_.post(boost::bind(&TChatClient::DoWrite, this, msg));
     }
@@ -100,7 +100,7 @@ private:
         }
     }
 
-    void DoWrite(TChatMessage msg) {
+    void DoWrite(TNetMessage msg) {
         std::cerr << "TChatClient::DoWrite(msg = '" << msg.Body() << "')" << std::endl;
         bool writeInProgress = !WriteMsgs_.empty();
         WriteMsgs_.push_back(msg);
@@ -135,8 +135,8 @@ private:
 private:
     boost::asio::io_service& IOService_;
     tcp::socket Socket_;
-    TChatMessage ReadMsg_;
-    TChatMessageQueue WriteMsgs_;
+    TNetMessage ReadMsg_;
+    TNetMessageQueue WriteMsgs_;
 };
 
 }

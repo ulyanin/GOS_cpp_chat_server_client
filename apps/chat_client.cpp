@@ -1,4 +1,6 @@
-#include <chat_server/chat_client.h>
+#include "chat_client.h"
+
+#include "message.pb.h"
 
 int main(int argc, const char* argv[])
 {
@@ -18,6 +20,10 @@ int main(int argc, const char* argv[])
             return 1;
         }
 
+//        NChat::TMessageProto proto;
+//        proto.set_body("12");
+//        std::cerr << proto.DebugString() << std::endl;
+
         NChat::TChatClient chatClient(io_service, iterator);
 
         boost::thread thread(boost::bind(&boost::asio::io_service::run, &io_service));
@@ -25,7 +31,7 @@ int main(int argc, const char* argv[])
         std::string line;
         while (std::getline(std::cin, line))
         {
-            NChat::TChatMessage msg = NChat::TChatMessage::FromString(line);
+            NChat::TNetMessage msg = NChat::TNetMessage::FromString(line);
             chatClient.Write(msg);
         }
 

@@ -1,1 +1,5 @@
-#include <chat_server/chat_client.h>
+#include "chat_client.h"
+
+namespace NChat {
+
+} // namespace NChat
