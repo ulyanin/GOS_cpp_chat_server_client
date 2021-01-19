@@ -10,7 +10,7 @@ add_library(chat_server_library lib.cpp chat_client.cpp chat_server.cpp chat_mes
 
 # We need this directory, and users of our library will need it too
 include_directories(${ProtobufIncludePath})
-target_include_directories(chat_server_library PUBLIC ../include ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(chat_server_library PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # This depends on (header only) boost
 target_link_libraries(chat_server_library PRIVATE ${Boost_LIBRARIES} chat_server_proto)
