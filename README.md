@@ -52,7 +52,7 @@ make
 
 
 ### Пример
-## Сервер
+#### Сервер
 ```bash
 ./apps/chat_server server 4242           
 Привет, я сервер
@@ -80,7 +80,7 @@ make
 /shutdown
 history saved to server_history.pb.txt
 ```
-## Клиент
+#### Клиент
 ```bash
 ./apps/chat_client ulyanin localhost 4242
 +------------------------------------------------------------------------------+
