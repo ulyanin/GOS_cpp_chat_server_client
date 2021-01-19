@@ -13,6 +13,10 @@ int main(int argc, const char* argv[])
         tcp::resolver resolver(io_service);
         tcp::resolver::query query(argv[1], argv[2]);
         tcp::resolver::iterator iterator = resolver.resolve(query);
+        if (iterator == tcp::resolver::iterator()) {
+            std::cerr << "Cannot resolve host=" << argv[1] << " port=" << argv[2] << std::endl;
+            return 1;
+        }
 
         NChat::TChatClient chatClient(io_service, iterator);
 

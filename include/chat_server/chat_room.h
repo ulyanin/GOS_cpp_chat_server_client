@@ -29,7 +29,7 @@ public:
 
     void Deliver(const TChatMessage& msg) {
         History_.push_back(msg);
-        while (History_.size() > MaxQueueSize) {
+        while (History_.size() > MaxHistorySize) {
             History_.pop_front();
         }
 
@@ -39,9 +39,10 @@ public:
     }
 
 private:
-    static constexpr size_t MaxQueueSize = 128;
+    static constexpr size_t MaxHistorySize = 128;
     std::set<TChatParticipantPtr> Participants_;
     TChatMessageQueue History_;
+    TChatMessageQueue Queue_;
 };
 
 } // namespace NChat

@@ -1,5 +1,4 @@
 #pragma once
-
 #include <boost/asio/buffer.hpp>
 
 #include <string>
@@ -8,6 +7,27 @@
 #include <deque>
 
 namespace NChat {
+
+class TNetMessage {
+public:
+    static constexpr size_t HeaderLength = 4;
+    static constexpr size_t MaxBodyLength = 4096;
+
+    TNetMessage() = default;
+
+    auto MutableHeaderBuffer() {
+        return boost::asio::buffer(Data_, HeaderLength);
+    }
+
+    auto MutableBodyBuffer() {
+        return boost::asio::buffer(Data_ + BodyLength_, BodyLength_);
+    }
+
+private:
+    char Data_[HeaderLength + MaxBodyLength] = "";
+    size_t BodyLength_ = 0;
+};
+
 
 class TChatMessage {
 public:

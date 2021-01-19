@@ -9,6 +9,7 @@ set(HEADER_LIST "${ChatServer_SOURCE_DIR}/include/chat_server/lib.h")
 add_library(chat_server_library lib.cpp chat_client.cpp chat_server.cpp ${HEADER_LIST})
 
 # We need this directory, and users of our library will need it too
+include_directories(${ProtobufIncludePath})
 target_include_directories(chat_server_library PUBLIC ../include)
 
 # This depends on (header only) boost

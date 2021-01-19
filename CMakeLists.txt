@@ -54,6 +54,8 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 #FetchContent_MakeAvailable(fmtlib)
 # Adds fmt::fmt
 
+add_subdirectory(proto)
+
 # The compiled library code is here
 add_subdirectory(src)
 

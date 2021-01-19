@@ -1,0 +1,6 @@
+package NChat;
+
+message TMessageProto {
+    optional string Body = 1;
+    optional string Login = 2;
+}
